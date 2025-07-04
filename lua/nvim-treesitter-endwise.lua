@@ -1,37 +1,25 @@
-local queries = require("nvim-treesitter.query")
 local parsers = require('nvim-treesitter.parsers')
 
 local M = {}
 
 function M.init()
-    if vim.fn.has('nvim-0.9') == 1 then
-        vim.api.nvim_create_autocmd({ 'FileType' }, {
-            callback = function(details)
-                require('nvim-treesitter.endwise').detach(details.buf)
+    vim.api.nvim_create_autocmd({ 'FileType' }, {
+        callback = function(details)
+            require('nvim-treesitter.endwise').detach(details.buf)
 
-                local lang = vim.treesitter.language.get_lang(details.match)
-                if not M.is_supported(lang) then
-                    return
-                end
+            local lang = vim.treesitter.language.get_lang(details.match)
+            if not M.is_supported(lang) then
+                return
+            end
 
-                require('nvim-treesitter.endwise').attach(details.buf)
-            end,
-        })
-        vim.api.nvim_create_autocmd({ 'BufUnload' }, {
-            callback = function(details)
-                require('nvim-treesitter.endwise').detach(details.buf)
-            end,
-        })
-    else
-        require('nvim-treesitter').define_modules {
-            endwise = {
-                module_path = 'nvim-treesitter.endwise',
-                enable = false,
-                disable = {},
-                is_supported = M.is_supported,
-            }
-        }
-    end
+            require('nvim-treesitter.endwise').attach(details.buf)
+        end,
+    })
+    vim.api.nvim_create_autocmd({ 'BufUnload' }, {
+        callback = function(details)
+            require('nvim-treesitter.endwise').detach(details.buf)
+        end,
+    })
 end
 
 function M.is_supported(lang)
@@ -41,10 +29,10 @@ function M.is_supported(lang)
             return false
         end
 
-        if not parsers.has_parser(nested_lang) then
+        if not vim.treesitter.language.add(nested_lang) then
             return false
         end
-        if queries.has_query_files(nested_lang, 'endwise') then
+        if #vim.treesitter.query.get_files(nested_lang, 'endwise') > 0 then
             return true
         end
         if seen[nested_lang] then
@@ -52,15 +40,13 @@ function M.is_supported(lang)
         end
         seen[nested_lang] = true
 
-        if queries.has_query_files(nested_lang, 'injections') then
-            local query = queries.get_query(nested_lang, 'injections')
-            if not query then
-                return false
-            end
-            for _, capture in ipairs(query.info.captures) do
-                if capture == 'language' or has_nested_endwise_language(capture) then
-                    return true
-                end
+        local query = vim.treesitter.query.get(nested_lang, 'injections')
+        if not query then
+            return false
+        end
+        for _, capture in ipairs(query.info.captures) do
+            if capture == 'language' or has_nested_endwise_language(capture) then
+                return true
             end
         end
 
