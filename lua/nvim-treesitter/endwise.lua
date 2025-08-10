@@ -124,6 +124,9 @@ local function endwise(bufnr)
     end
 
     local tree = lang_tree:tree_for_range({ row, col, row, col })
+    if not tree then
+        return
+    end
     local root = tree:root()
     if not root then
         return
