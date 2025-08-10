@@ -1,5 +1,5 @@
 config({
-  extension: "v",
+  extension: "svh",
   overrides: <<~INIT_LUA
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
