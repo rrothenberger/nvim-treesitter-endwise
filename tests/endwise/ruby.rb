@@ -119,7 +119,7 @@ test "ruby, valid syntax is no-op", <<~END
 -module Foo█
 -end
 +module Foo
-+  
++
 +end
 END
 
